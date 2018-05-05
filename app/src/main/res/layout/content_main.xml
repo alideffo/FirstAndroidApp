@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".MainActivity"
+    tools:showIn="@layout/activity_main">
+
+
+    <!-- Red Text -->
+    <TextView
+        android:id="@+id/textRed"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="15dp"
+        android:textColor="#FF0000"
+        android:text="Red"/>
+
+    <!-- Green Text -->
+    <TextView
+        android:id="@+id/textGreen"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_marginLeft="15dp"
+        android:layout_below="@+id/textRed"
+        android:textColor="#00FF00"
+        android:text="Green"/>
+
+    <!-- Blue Text -->
+    <TextView
+        android:id="@+id/textBlue"
+        android:layout_width="60dp"
+        android:layout_height="30dp"
+        android:layout_marginLeft="15dp"
+        android:layout_below="@+id/textGreen"
+        android:textColor="#0000FF"
+        android:text="Blue"/>
+
+    <EditText
+        android:id="@+id/valueRed"
+        android:layout_width="40dp"
+        android:layout_height="43dp"
+        android:layout_toRightOf="@+id/textRed"
+        android:hint="0"
+        android:textColorHint="#ff0000"
+        android:textColor="#ff0000"
+        android:inputType="number"/>
+
+    <!--Text "Green" -->
+    <EditText
+        android:id="@+id/valueGreen"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/valueRed"
+        android:layout_toRightOf="@+id/textGreen"
+        android:textColor="#00ff00"
+        android:hint="0"
+        android:textColorHint="#00ff00"
+        android:maxLength="3"
+        android:inputType="number"/>
+
+    <!--Text "Blue" -->
+    <EditText
+        android:id="@+id/valueBlue"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/valueGreen"
+        android:layout_toRightOf="@+id/textBlue"
+        android:textColor="#0000ff"
+        android:hint="0"
+        android:textColorHint="#0000ff"
+        android:maxLength="3"
+        android:inputType="number"/>
+
+
+    <SeekBar
+        android:id="@+id/barRed"
+        android:layout_width="300dp"
+        android:layout_height="20dp"
+        android:layout_alignTop="@+id/textRed"
+        android:layout_marginLeft="125dp"
+        android:max="255" />   <!-- set the Maximum to 255 instead of 100 -->
+
+    <SeekBar
+        android:id="@+id/barGreen"
+        android:layout_width="300dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="55dp"
+        android:layout_marginLeft="125dp"
+        android:max="255"/>
+
+    <SeekBar
+        android:id="@+id/barBlue"
+        android:layout_width="300dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="95dp"
+        android:layout_marginLeft="125dp"
+        android:max="255"/>
+
+    <CheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="225dp"
+        android:layout_height="45dp"
+        android:layout_below="@+id/textBlue"
+        android:layout_marginLeft="8dp"
+        android:text="Use Motion Sensors"/>
+
+
+    <TextView
+        android:id="@+id/preview"
+        android:layout_width="120dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/textBlue"
+        android:layout_toRightOf="@+id/checkbox"
+        android:text="Color Preview"
+        android:gravity="center"
+        android:textAlignment="center"/>
+
+    <RadioGroup
+        android:id="@+id/btnGroup"
+        android:layout_width="215dp"
+        android:layout_height="180dp"
+        android:layout_below="@+id/checkbox"
+        android:layout_marginLeft="8dp">
+
+        <RadioButton
+            android:id="@+id/backColor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Background Color"
+            android:layout_marginTop="50dp"
+            android:onClick="btnClicked"/>
+
+        <RadioButton
+            android:id="@+id/txtColor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Text Color"
+            android:onClick="btnClicked"/>
+
+        <RadioButton
+            android:id="@+id/btnColor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button Color"
+            android:onClick="btnClicked"/>
+
+        <RadioButton
+            android:id="@+id/actionBtnColor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Floating Action Button Color"
+            android:onClick="btnClicked"/>
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/confirmBtn"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="Set color"
+        android:layout_below="@+id/btnGroup"
+        android:layout_marginLeft="140dp"/>
+
+</RelativeLayout>
