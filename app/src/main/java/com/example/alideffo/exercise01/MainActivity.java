@@ -1,12 +1,10 @@
 package com.example.alideffo.exercise01;
 
-import android.app.Activity;
-import android.app.FragmentManager;
-import android.content.ClipData;
+
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
-import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -26,11 +24,8 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
-import org.w3c.dom.Text;
 
 import static android.graphics.Color.rgb;
 
@@ -43,16 +38,30 @@ public class MainActivity extends AppCompatActivity implements SeekBar.OnSeekBar
     private TextView preview;
     private int red, green, blue;
     private RadioGroup radioGroup;
-    private RadioButton btnColor, backColor, txtColor, fColor;
-    private Button button;
-    private FloatingActionButton fab;
-    //private Context context;
+    private RadioButton btnColor, backColor, txtColor, fColor; //Differents Radiobuttons IDs.
+    private Button button; // The confirm Button
+    private FloatingActionButton fab; // The Floating button
     private CheckBox checkBox;
+
+    private CheckBox cbText;
+    private RadioButton txtText;
+    private RadioButton backText;
+    private RadioButton btnText;
+    private RadioButton fBtnText;
+    private int btnChoice;
 
     SensorManager sensorManager;
     Sensor sensor;
     boolean start = true;
     int xPos, yPos;
+
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
+
+    private int btnRed, btnGreen, btnBlue;
+    private int backRed, backGreen, backBlue;
+    private int txtRed, txtGreen, txtBlue;
+    private int fRed, fGreen, fBlue;
 
 
     @Override
@@ -60,47 +69,14 @@ public class MainActivity extends AppCompatActivity implements SeekBar.OnSeekBar
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        //context = getApplicationContext();
-
-
 
         sensorManager = (SensorManager) this.getSystemService(SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-
-
-
-        red = green = blue = 0;
-
-        //Red
-        barRed = findViewById(R.id.barRed);
-        redValue = findViewById(R.id.valueRed);
-        barRed.setOnSeekBarChangeListener(this );
-        redValue.addTextChangedListener(this);
-
-        //Green
-        barGreen = findViewById(R.id.barGreen);
-        greenValue = findViewById(R.id.valueGreen);
-        barGreen.setOnSeekBarChangeListener(this);
-        greenValue.addTextChangedListener(this);
-
-        //Blue
-        barBlue = findViewById(R.id.barBlue);
-        blueValue = findViewById(R.id.valueBlue);
-        barBlue.setOnSeekBarChangeListener(this);
-        blueValue.addTextChangedListener(this);
-
-        preview = (TextView) findViewById(R.id.preview);
-        radioGroup = (RadioGroup) findViewById(R.id.btnGroup);
-        button = (Button) findViewById(R.id.confirmBtn);
-
-        btnColor = (RadioButton) findViewById(R.id.btnColor);
-        backColor = (RadioButton) findViewById(R.id.backColor);
-        txtColor = (RadioButton) findViewById(R.id.txtColor);
-        fColor = findViewById(R.id.actionBtnColor);
+        initComponent();
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -112,6 +88,32 @@ public class MainActivity extends AppCompatActivity implements SeekBar.OnSeekBar
         });
 
         button.setOnClickListener(this);
+
+        retrieveData();
+
+    }
+
+    /**
+     * This just update the data when our onCreate funtion is called again. It used the data from
+     * the retrieveData Function.
+     */
+    private void updateData() {
+        redValue.setText(String.valueOf(red));
+        greenValue.setText(String.valueOf(green));
+        blueValue.setText(String.valueOf(blue));
+
+        getWindow().getDecorView().setBackgroundColor(rgb(backRed, backGreen, backBlue));
+        button.setBackgroundColor(rgb(btnRed, btnGreen, btnBlue));
+
+        cbText.setTextColor(rgb(txtRed,txtGreen,txtBlue));
+        txtText.setTextColor(rgb(txtRed,txtGreen,txtBlue));
+        backText.setTextColor(rgb(txtRed,txtGreen,txtBlue));
+        btnText.setTextColor(rgb(txtRed,txtGreen,txtBlue));
+        fBtnText.setTextColor(rgb(txtRed,txtGreen,txtBlue));
+
+        fab.setBackgroundTintList(ColorStateList.valueOf(rgb(fRed,fGreen,fBlue)));
+
+        radioGroup.check(btnChoice);
     }
 
 
@@ -133,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements SeekBar.OnSeekBar
      */
     public void previewColorChange() {
         preview.setBackgroundColor(rgb(red, green, blue));
-        preview.setTextColor(rgb(255-red, 255-green, 255-blue)); //Invert the RGB
+        preview.setTextColor(rgb(255-red, 255-green, 255-blue/2)); //Invert the RGB
     }
 
 
@@ -143,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements SeekBar.OnSeekBar
         if(bar.equals(barRed)){
             while(fromUser) {
                 redValue.setText(String.valueOf(progress));
-                fromUser = !fromUser;
+                fromUser = !fromUser;   //in other to set the cursor at the end of the last entered int
             }
         }
         if(bar.equals(barGreen)){
@@ -181,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements SeekBar.OnSeekBar
                     blue = value;
                     previewColorChange();
                 }
+                saveData();
             }
         } catch (Exception e){}
     }
@@ -223,70 +226,44 @@ public class MainActivity extends AppCompatActivity implements SeekBar.OnSeekBar
     }
 
 
-
+    /**
+     * To handle the Confirm button click. The id of the buttons are knowned.
+     * @param v The view of the application.
+     */
     @Override
     public void onClick(View v) {
-        int id = btnClicked(v);
-
+        int id = btnClicked(v);             //See the id of the selected radio button. (1 - 4)
+        btnChoice = id;                     //Save the current id in the variable btnChoice.
         if(id == btnColor.getId()){
-            button.setBackgroundColor(rgb(red,green,blue));
+            btnRed = red; btnGreen = green; btnBlue = blue;
+            button.setBackgroundColor(rgb(btnRed,btnGreen,btnBlue));
         }
         if(id == backColor.getId()){
-            getWindow().getDecorView().setBackgroundColor(rgb(red,green,blue));   //https://stackoverflow.com/questions/4761686/how-to-set-background-color-of-an-activity-to-white-programmatically
+            backRed = red; backGreen = green; backBlue = blue;
+            getWindow().getDecorView().setBackgroundColor(rgb(backRed,backGreen,backBlue));   //https://stackoverflow.com/questions/4761686/how-to-set-background-color-of-an-activity-to-white-programmatically
         }
         if(id == txtColor.getId()){
-            final CheckBox cbText = findViewById(R.id.checkbox);
-            final RadioButton txtText = (RadioButton) findViewById(R.id.txtColor);
-            final RadioButton backText = (RadioButton) findViewById(R.id.backColor);
-            final RadioButton btnText = (RadioButton) findViewById(R.id.btnColor);
-            final RadioButton fBtnText = (RadioButton) findViewById(R.id.actionBtnColor);
-
-            cbText.setTextColor(rgb(red,green,blue));
-            txtText.setTextColor(rgb(red,green,blue));
-            backText.setTextColor(rgb(red,green,blue));
-            btnText.setTextColor(rgb(red,green,blue));
-            fBtnText.setTextColor(rgb(red,green,blue));
+            txtRed = red; txtGreen = green; txtBlue = blue;
+            cbText.setTextColor(rgb(txtRed,txtGreen,txtBlue));
+            txtText.setTextColor(rgb(txtRed,txtGreen,txtBlue));
+            backText.setTextColor(rgb(txtRed,txtGreen,txtBlue));
+            btnText.setTextColor(rgb(txtRed,txtGreen,txtBlue));
+            fBtnText.setTextColor(rgb(txtRed,txtGreen,txtBlue));
         }
         if(id == fColor.getId()){
-            fab.setBackgroundTintList(ColorStateList.valueOf(rgb(red,green,blue)));
+            fRed = red; fGreen = green; fBlue = blue;
+            fab.setBackgroundTintList(ColorStateList.valueOf(rgb(fRed,fGreen,fBlue)));
         }
+        saveData();
     }
 
-    /*public Context getContext() {
-        return context;
-    }
-    */
-
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) { }
-
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) { }
-
-    @Override
-    public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count) { }
-
-
-
-
-
-    @Override
-    protected void onResume() {
-    super.onResume();
-    sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
-}
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        sensorManager.unregisterListener(this, sensor);
-    }
-
+    /**
+     * The sensor Manager Handeling
+     * @param event The position/move of the phone
+     */
     @Override
     public void onSensorChanged(SensorEvent event) {
+
         float xCurrent = event.values[0];
         float yCurrent = event.values[1];
 
@@ -295,27 +272,30 @@ public class MainActivity extends AppCompatActivity implements SeekBar.OnSeekBar
 
         checkBox = findViewById(R.id.checkbox);
         if (checkBox.isChecked()) {
-            if (yPos >= 0 && yPos < 900) {
-                if (yPos >= 0 && yPos < 300) {
+            if (yPos >= 0 && yPos < 2800) {
+                if (yPos >= 0 && yPos < 1000) {
                     if (xPos >= 0 && xPos <= 255) {
-                        System.out.println("yCurrent1: " + yCurrent);
-                        System.out.println("yPos1: " + yPos);
+                        System.out.println("X: " + xPos);
+                        System.out.println("Y: " + yPos);
+                        //System.out.println("Z: " + zPos);
                         barRed.setProgress(xPos);
                         redValue.setText(String.valueOf(xPos));
                     }
                 }
-                if (yPos >= 300 && yPos < 600) {
+                if (yPos >= 1000 && yPos < 1900) {
                     if (xPos >= 0 && xPos <= 255) {
-                        System.out.println("yCurrent1: " + yCurrent);
-                        System.out.println("yPos1: " + yPos);
+                        System.out.println("X: " + xPos);
+                        System.out.println("Y: " + yPos);
+                        //System.out.println("Z: " + zPos);
                         barGreen.setProgress(xPos);
                         greenValue.setText(String.valueOf(xPos));
                     }
                 }
-                if (yPos >= 600 && yPos < 900) {
+                if (yPos >= 1900 && yPos < 2800) {
                     if (xPos >= 0 && xPos <= 255) {
-                        System.out.println("yCurrent1: " + yCurrent);
-                        System.out.println("yPos1: " + yPos);
+                        System.out.println("X: " + xPos);
+                        System.out.println("Y: " + yPos);
+                        //System.out.println("Z: " + zPos);
                         barBlue.setProgress(xPos);
                         blueValue.setText(String.valueOf(xPos));
                     }
@@ -325,15 +305,144 @@ public class MainActivity extends AppCompatActivity implements SeekBar.OnSeekBar
             }
         }
     }
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+
+
+    /**
+     * All the Data/Values of the application are saved here. This Function is usefull for our
+     * SharedPreferences to retrieve our data. Even if the application is closed.
+     */
+    private void saveData() {
+        sharedPreferences = getSharedPreferences("myPreferences", Context.MODE_PRIVATE);
+        editor = sharedPreferences.edit();
+
+        //The main color (Values in the EditText)
+        editor.putInt("red", red);
+        editor.putInt("green", green);
+        editor.putInt("blue", blue);
+
+        //The buttons Color values
+        editor.putInt("redBtn", btnRed);
+        editor.putInt("greenBtn", btnGreen);
+        editor.putInt("blueBtn", btnBlue);
+
+        //The Background color values
+        editor.putInt("redBack", backRed);
+        editor.putInt("greenBack", backGreen);
+        editor.putInt("blueBack", backBlue);
+
+        //The Text color values
+        editor.putInt("redTxt", txtRed);
+        editor.putInt("greenTxt", txtGreen);
+        editor.putInt("blueTxt", txtBlue);
+
+        //The floating Button color values
+        editor.putInt("redF", fRed);
+        editor.putInt("greenF", fGreen);
+        editor.putInt("blueF", fBlue);
+
+        //The choice of the radio buttons
+        editor.putInt("choice", btnChoice);
+
+        editor.commit();
+    }
+
+
+    /**
+     * To retrieve all the data, which are stored in the saveData function.
+     */
+    private void retrieveData() {
+        sharedPreferences = getSharedPreferences("myPreferences", Context.MODE_PRIVATE);
+
+        red = sharedPreferences.getInt("red", 20);
+        green = sharedPreferences.getInt("green", 89);
+        blue = sharedPreferences.getInt("blue", 200);
+
+        btnBlue = sharedPreferences.getInt("blueBtn", btnBlue);
+        btnRed = sharedPreferences.getInt("redBtn", btnRed);
+        btnGreen = sharedPreferences.getInt("greenBtn", btnGreen);
+
+        backRed = sharedPreferences.getInt("redBack", backRed);
+        backGreen = sharedPreferences.getInt("greenBack", backGreen);
+        backBlue = sharedPreferences.getInt("blueBack", backBlue);
+
+        txtRed = sharedPreferences.getInt("redTxt", 0);
+        txtGreen = sharedPreferences.getInt("greenTxt", 0);
+        txtBlue = sharedPreferences.getInt("blueTxt", 0);
+
+        fRed = sharedPreferences.getInt("redF", 0);
+        fGreen = sharedPreferences.getInt("greenF", 0);
+        fBlue = sharedPreferences.getInt("blueF", 0);
+
+        btnChoice = sharedPreferences.getInt("choice", 1);
+
+        updateData();
+    }
+
+
+
+    /**
+     * Here are all the components which are used in our software. They are all initialised at the
+     * beginning of our program.
+     */
+    private void initComponent() {
+        //All components for the red Color (SeekBar and Value)
+        barRed = findViewById(R.id.barRed);
+        redValue = findViewById(R.id.valueRed);
+        barRed.setOnSeekBarChangeListener(this );
+        redValue.addTextChangedListener(this);
+
+        //All components for the green Color (SeekBar and Value)
+        barGreen = findViewById(R.id.barGreen);
+        greenValue = findViewById(R.id.valueGreen);
+        barGreen.setOnSeekBarChangeListener(this);
+        greenValue.addTextChangedListener(this);
+
+        //All components for the blue Color (SeekBar and Value)
+        barBlue = findViewById(R.id.barBlue);
+        blueValue = findViewById(R.id.valueBlue);
+        barBlue.setOnSeekBarChangeListener(this);
+        blueValue.addTextChangedListener(this);
+
+        //Other components
+        preview = (TextView) findViewById(R.id.preview);        // For our 'Preview Color Textview'
+        radioGroup = (RadioGroup) findViewById(R.id.btnGroup);  // The group of the radiobuttons
+        button = (Button) findViewById(R.id.confirmBtn);        // The confirm button
+
+        btnColor = (RadioButton) findViewById(R.id.btnColor);   // id of the CONFIRM BUTTON COLOR
+        backColor = (RadioButton) findViewById(R.id.backColor); // id of the BACKGROUND COLOR
+        txtColor = (RadioButton) findViewById(R.id.txtColor);   // id of the TEXT COLOR
+        fColor = findViewById(R.id.actionBtnColor);             // id of the FLOATINGBUTTON COLOR
+
+        //The id of all the text, which can be colored.
+        cbText = findViewById(R.id.checkbox);
+        txtText = (RadioButton) findViewById(R.id.txtColor);
+        backText = (RadioButton) findViewById(R.id.backColor);
+        btnText = (RadioButton) findViewById(R.id.btnColor);
+        fBtnText = (RadioButton) findViewById(R.id.actionBtnColor);
 
     }
 
     @Override
-    public void onSaveInstanceState(Bundle bundle) {
-
-        super.onSaveInstanceState(bundle);
+    protected void onResume() {
+        super.onResume();
+        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this, sensor);
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) { }
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) { }
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) { }
 }
